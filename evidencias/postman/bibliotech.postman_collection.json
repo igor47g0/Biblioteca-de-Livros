@@ -1,0 +1,195 @@
+{
+  "info": {
+    "_postman_id": "b78b0cb1-1234-4567-89ab-bibliotech001",
+    "name": "BiblioTech API — Coleção de Testes e Evidências",
+    "description": "Coleção de testes para validação completa do CRUD e tratamento de erros do sistema BiblioTech (Spring Boot 3.x + MySQL).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. POST /livros — Cadastrar Livro (201 Created)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Arquitetura Limpa: O Guia do Artesão para Estrutura e Design de Software\",\n  \"autor\": \"Robert C. Martin\",\n  \"isbn\": \"9788550804606\",\n  \"genero\": \"Engenharia de Software\",\n  \"exemplares\": 8\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/livros",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros"]
+        }
+      }
+    },
+    {
+      "name": "2. POST /livros — Erro de Validação de Campos (400 Bad Request)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Oi\",\n  \"autor\": \"\",\n  \"isbn\": \"\",\n  \"genero\": \"\",\n  \"exemplares\": -3\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/livros",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros"]
+        }
+      }
+    },
+    {
+      "name": "3. POST /livros — Erro de ISBN Duplicado (409 Conflict)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Arquitetura Limpa - Cópia\",\n  \"autor\": \"Robert C. Martin\",\n  \"isbn\": \"9788550804606\",\n  \"genero\": \"Engenharia de Software\",\n  \"exemplares\": 2\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/livros",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros"]
+        }
+      }
+    },
+    {
+      "name": "4. GET /livros — Listar Todos os Livros (200 OK)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/livros",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros"]
+        }
+      }
+    },
+    {
+      "name": "5. GET /livros/{id} — Buscar Livro por ID Existente (200 OK)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/livros/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros", "1"]
+        }
+      }
+    },
+    {
+      "name": "6. GET /livros/{id} — Buscar ID Inexistente (404 Not Found)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/livros/9999",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros", "9999"]
+        }
+      }
+    },
+    {
+      "name": "7. PUT /livros/{id} — Atualizar Livro Existente (200 OK)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Clean Code: Habilidades Práticas do Agile Software\",\n  \"autor\": \"Robert C. Martin\",\n  \"isbn\": \"9780132350884\",\n  \"genero\": \"Engenharia de Software & Boas Práticas\",\n  \"exemplares\": 12\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/livros/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros", "1"]
+        }
+      }
+    },
+    {
+      "name": "8. PUT /livros/{id} — Atualizar Livro com ID Inexistente (404 Not Found)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Livro Fantasma\",\n  \"autor\": \"Autor Desconhecido\",\n  \"isbn\": \"9780000000000\",\n  \"genero\": \"Ficção\",\n  \"exemplares\": 1\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/livros/9999",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros", "9999"]
+        }
+      }
+    },
+    {
+      "name": "9. DELETE /livros/{id} — Excluir Livro Existente (204 No Content)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/livros/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros", "1"]
+        }
+      }
+    },
+    {
+      "name": "10. DELETE /livros/{id} — Excluir Livro com ID Inexistente (404 Not Found)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/livros/9999",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["livros", "9999"]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+================================================================================
+BIBLIOTECH — SISTEMA DE ACERVO DE BIBLIOTECA
+ARQUIVO DE RESPOSTAS E REGISTRO DE USO CRÍTICO DE IA (RESPOSTAS.txt)
+================================================================================
+
+Aluno / Desenvolvedor: Igor
+Projeto: BiblioTech (Spring Boot 3.x + MySQL + Front-end Web)
+Data: 09/11/2026
+
+--------------------------------------------------------------------------------
+1. RESPOSTAS ÀS PERGUNTAS DE REFLEXÃO CRÍTICA
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+QUESTÃO 1: INTEGRAÇÃO
+"Que problema de integração entre front-end e back-end (ex.: CORS, formato do JSON,
+status HTTP) você enfrentou e como resolveu?"
+--------------------------------------------------------------------------------
+
+RESPOSTA:
+Durante o desenvolvimento e integração entre o front-end e a API REST em Spring Boot,
+o principal desafio enfrentado foi a política de CORS (Cross-Origin Resource Sharing)
+associada às requisições do tipo Preflight (método HTTP OPTIONS).
+
+Contexto e Causa do Problema:
+Quando a aplicação front-end é executada localmente (por exemplo, via servidor local
+como VS Code Live Server em http://localhost:5500, ou servida via file:///), o navegador
+identifica que a origem (porta/protocolo) difere da API (http://localhost:8080).
+Ao executar operações com Content-Type "application/json" nos métodos POST, PUT e DELETE,
+o navegador dispara automaticamente uma requisição preliminar OPTIONS (Preflight Request).
+Inicialmente, o Spring Boot rejeitou essa verificação inicial com status HTTP 403 Forbidden
+ou bloqueio do navegador por ausência dos cabeçalhos 'Access-Control-Allow-Origin' e
+'Access-Control-Allow-Methods'.
+
+Solução Implementada:
+Para solucionar o problema de forma definitiva e desacoplada, criei uma classe de
+configuração dedicada implementando a interface 'WebMvcConfigurer' do Spring Web:
+`com.bibliotech.config.CorsConfig`.
+Configurou-se explicitamente:
+1. 'allowedOriginPatterns("*")': permitindo origens locais flexíveis de desenvolvimento.
+2. 'allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")': autorizando
+   todos os verbos do CRUD e o preflight OPTIONS.
+3. 'allowedHeaders("*")': permitindo envio de cabeçalhos JSON como Content-Type e Accept.
+4. 'maxAge(3600)': cacheando a resposta do preflight por 1 hora para otimizar requisições.
+
+Além do CORS, outro ponto crítico foi o envio do identificador no método PUT.
+Alguns exemplos preliminares omitiam o ID na URL ou tentavam passar o ID apenas dentro
+do payload JSON. No contrato REST rigoroso deste projeto, o PUT exige a URL '/livros/{id}'.
+No JavaScript (`app.js`), corrigiu-se a montagem da URL dinâmica (`${getApiUrl()}/${id}`)
+e assegurou-se que o Content-Type estivesse explícito como 'application/json', garantindo
+a serialização correta de tipos primitivos (ex.: 'exemplares' como Number inteiro e não String).
+
+Por fim, tratou-se a indisponibilidade da API (`net::ERR_CONNECTION_REFUSED` / `Failed to fetch`).
+Quando o front-end é aberto antes do Spring Boot iniciar, a falha de conexão agora é capturada
+de forma amigável, fornecendo instruções visuais na interface ("Como Iniciar o Backend") e um
+Modo Simulado em memória que permite testar todas as validações e coletar evidências de tela.
+
+
+--------------------------------------------------------------------------------
+QUESTÃO 2: CONTRATO DA API E VALIDAÇÃO
+"Como o front-end trata as respostas 400, 404 e 409 da API? Por que o back-end
+precisa validar os dados mesmo que o front-end já valide?"
+--------------------------------------------------------------------------------
+
+RESPOSTA:
+Parte 1 — Tratamento no Front-end das Respostas 400, 404 e 409:
+No front-end (`frontend/js/app.js`), o método `salvarLivro()` e as funções de consumo
+não presumem sucesso cegamente; a resposta do `fetch` é inspecionada pelo `response.status`:
+
+- HTTP 400 (Bad Request): Ocorre quando dados obrigatórios estão em branco, o título não
+  respeita o tamanho de 3 a 150 caracteres ou o número de exemplares é negativo. O front-end
+  recebe o JSON de erro (`ErrorResponseDTO`), percorre a lista de validações específicas
+  (`validacoes`), adiciona a classe CSS `is-invalid` nos inputs correspondentes (destacando-os
+  em vermelho) e insere as mensagens detalhadas de cada campo nos elementos `.field-error`,
+  além de exibir um alerta geral com a lista formatada no topo do modal.
+
+- HTTP 404 (Not Found): Ocorre ao tentar buscar, editar ou excluir um livro cujo ID não
+  consta no MySQL. O front-end intercepta o status, fecha modais que dependem do ID, exibe
+  uma notificação em banner/toast (`mostrarAlerta('danger', ...)` informando que o registro
+  inexiste no banco e aciona automaticamente `carregarLivros()` para sincronizar a tabela
+  com o estado real do banco.
+
+- HTTP 409 (Conflict): Ocorre na tentativa de cadastrar (POST) ou atualizar (PUT) um livro
+  utilizando um ISBN que já pertence a outro registro no banco de dados. O front-end aplica
+  a classe de erro diretamente no campo de ISBN, exibe a mensagem de conflito abaixo do
+  campo e exibe um alerta claro de violação de unicidade, impedindo o fechamento acidental
+  do formulário e permitindo ao operador corrigir o ISBN digitado.
+
+Parte 2 — Por que o Back-end precisa validar mesmo se o Front-end já validar?
+A validação no front-end é uma funcionalidade estritamente voltada para a Experiência do
+Usuário (UX): fornece feedback instantâneo e reduz tráfego desnecessário de rede. No entanto,
+o front-end NUNCA deve ser considerado uma barreira de segurança confiável, pelos seguintes motivos:
+
+1. Bypassing / Inspeção do Cliente: Qualquer usuário com o console de desenvolvedor (DevTools)
+   do navegador aberto pode desabilitar validações HTML5 (como `required`, `minlength`),
+   alterar o script JavaScript em tempo de execução ou desativar o JavaScript por completo.
+2. Clientes Externos e API Direta: A API REST está exposta na rede e pode ser consumida por
+   outras ferramentas fora do navegador, tais como Postman, cURL, scripts Python ou agentes
+   automatizados que enviam requisições HTTP arbitrárias ignorando qualquer validação de interface.
+3. Integridade e Regras de Negócio Globais: Certas validações não podem ser determinadas de forma
+   confiável pelo front-end sem consultar o estado transacional do banco — o caso típico é a
+   unicidade do ISBN. Apenas o back-end, sob transação ACID no MySQL, consegue garantir que
+   dois usuários simultâneos não cadastrem o mesmo código ISBN (evitando race conditions).
+Portanto, a validação no Back-end com Bean Validation e Services é a única garantia real de
+integridade, consistência e segurança do banco de dados.
+
+
+--------------------------------------------------------------------------------
+QUESTÃO 3: USO CRÍTICO DA IA
+"Qual foi o prompt mais importante que você utilizou e por quê? Que erro ou
+imperfeição o código gerado apresentou (ex.: imports javax em vez de jakarta, status
+200 para tudo) e como foi corrigido? Por que um programador não pode copiar e colar
+código gerado por IA sem testá-lo?"
+--------------------------------------------------------------------------------
+
+RESPOSTA:
+Parte 1 — Prompt Mais Importante e Motivação:
+O prompt mais importante utilizado foi o que estabeleceu a arquitetura em camadas e o
+contrato estrito de status HTTP para o Spring Boot 3.x:
+
+Prompt:
+"Gere uma API REST em Java com Spring Boot 3 e Spring Data JPA para uma entidade Livro
+(id, titulo, autor, isbn único, genero, exemplares >= 0). A aplicação DEVE seguir rigorosamente
+a arquitetura em camadas (Controller, Service, Repository, DTO, Model, ExceptionHandler) e
+respeitar os seguintes status HTTP: POST retorna 201 Created com Location header; GET retorna 200;
+PUT retorna 200; DELETE retorna 204 No Content; IDs inexistentes devem retornar 404; ISBN duplicado
+retorna 409; e validações inválidas retornam 400. Nenhuma regra de negócio deve ficar no Controller.
+Utilize a versão moderna do Jakarta Persistence compatível com Spring Boot 3."
+
+Esse prompt foi crucial porque definiu os limites do projeto, os contratos de resposta e as
+boas práticas desde a fundação, prevenindo respostas excessivamente simplificadas.
+
+Parte 2 — Falhas e Imperfeições Identificadas no Código Gerado e Como Foram Corrigidas:
+Durante a geração com ferramentas de IA, identificaram-se três imperfeições críticas:
+
+1. Imports obsoletos (`javax.persistence.*` vs `jakarta.persistence.*`):
+   Falha: Modelos de IA frequentemente sugerem anotações antigas de JPA (`javax.persistence.Entity`,
+   `javax.validation.constraints.NotBlank`). No Spring Boot 3.x, o pacote base do Java EE migrou
+   integralmente para o Jakarta EE. Se mantido `javax`, o código gerava erro de compilação ou
+   as anotações eram solenemente ignoradas em runtime pelo Hibernate 6.
+   Correção: Substituição manual e sistemática de todos os imports para `jakarta.persistence.*`
+   e `jakarta.validation.constraints.*`.
+
+2. Retorno genérico de status HTTP 200 para todas as operações:
+   Falha: Em respostas preliminares, a IA gerou métodos de POST retornando `ResponseEntity.ok(...)`
+   (200 OK) em vez de `201 Created`, e o método DELETE retornando 200 com mensagem textual no corpo
+   em vez de `204 No Content`.
+   Correção: Refatoração do `LivroController` para utilizar `ResponseEntity.created(location).body(...)`
+   no POST, e `ResponseEntity.noContent().build()` no DELETE, aderindo 100% ao padrão REST exigido
+   na matriz de avaliação.
+
+3. Acoplamento de regra de negócio e violação de camadas:
+   Falha: A IA tentou injetar o `LivroRepository` diretamente no `LivroController` e fazer a verificação
+   de ISBN e `findById` dentro do método do Controller.
+   Correção: Criação da camada `LivroService`, movendo toda a lógica de negócio, transações (`@Transactional`)
+   e lançamento de exceções (`DuplicateIsbnException` e `ResourceNotFoundException`) para o Service,
+   mantendo o Controller limpo e aderente ao princípio de responsabilidade única (SRP).
+
+4. Tratamento incompleto de ISBN duplicado no PUT:
+   Falha: A IA verificava apenas se o ISBN existia no banco no PUT (`existsByIsbn`), o que impedia
+   atualizar outros campos do livro (ex.: mudar apenas o número de exemplares) porque o próprio livro
+   já possuía aquele ISBN!
+   Correção: Criação do método derivado customizado no repositório:
+   `boolean existsByIsbnAndIdNot(String isbn, Long id);`, permitindo que o livro mantenha o seu
+   próprio ISBN durante a edição, mas rejeite caso o ISBN pertença a outro livro (HTTP 409).
+
+Parte 3 — Por que o programador não pode copiar e colar código gerado por IA sem testá-lo?
+A Inteligência Artificial atua como um acelerador e gerador de padrões estatísticos, não como
+um engenheiro de software consciente do contexto operacional da aplicação.
+Copiar e colar código sem revisão acarreta riscos severos:
+1. Alucinações de bibliotecas e versões: A IA frequentemente mistura código legado (Java 8/11 com
+   Spring Boot 2) com versões atuais (Java 17/21 com Spring Boot 3), gerando incompatibilidades silenciosas.
+2. Falhas de segurança: Vulnerabilidades como SQL Injection (concatenação de queries), ausência de
+   sanitização contra XSS e CORS excessivamente permissivo em produção são geradas rotineiramente.
+3. Quebra de contratos de negócio: Se o programador não compreender o fluxo, comportamentos incorretos
+   (como um PUT que insere um novo registro caso não encontre o ID em vez de retornar 404) passam
+   despercebidos, violando os critérios de qualidade e compromissos do sistema.
+O papel do desenvolvedor é o de arquiteto e auditor crítico: analisar, adaptar, testar exaustivamente
+e garantir que cada linha de código atenda com exatidão aos requisitos funcionais e não-funcionais.
+
+
+--------------------------------------------------------------------------------
+2. REGISTRO DE PROMPTS DE IA UTILIZADOS NO PROJETO
+--------------------------------------------------------------------------------
+
+PROMPT 1 (Modelagem e Persistência Spring Data JPA):
+"Crie a entidade JPA Livro para Spring Boot 3 com os atributos: id (Long, auto-incremento),
+titulo (String, obrigatório, de 3 a 150 caracteres), autor (String, obrigatório), isbn (String,
+obrigatório e único), genero (String, obrigatório) e exemplares (Integer, maior ou igual a 0).
+Utilize anotações de jakarta.persistence e forneça construtores, getters e setters."
+
+PROMPT 2 (Repositório Seguro contra SQL Injection):
+"Crie a interface LivroRepository estendendo JpaRepository<Livro, Long>. Inclua métodos derivados
+para verificar se o ISBN já existe e para verificar se existe outro livro com o mesmo ISBN
+ignorando um ID específico (para validação de PUT). Não utilize concatenação de strings em SQL."
+
+PROMPT 3 (Regras de Negócio e Service Layer):
+"Implemente a classe LivroService contendo as operações do CRUD de Livro. O cadastro deve validar
+se o ISBN já existe e lançar uma exceção de conflito (409). A atualização deve verificar a existência
+do ID (lançar 404 se inexistente) e verificar duplicidade de ISBN com outros livros. A exclusão
+deve verificar a existência antes de remover (404 se inexistente). Isole todas as regras do controller."
+
+PROMPT 4 (Tratamento Global de Erros - RestControllerAdvice):
+"Crie um GlobalExceptionHandler com @RestControllerAdvice para tratar:
+- MethodArgumentNotValidException (retornando HTTP 400 com lista de campos inválidos e mensagens)
+- ResourceNotFoundException (retornando HTTP 404 com mensagem amigável)
+- DuplicateIsbnException (retornando HTTP 409 com mensagem descritiva)
+- Erros genéricos de requisição malformada (HTTP 400)."
+
+PROMPT 5 (Configuração de CORS):
+"Crie uma configuração de WebMvcConfigurer em Spring Boot 3 habilitando CORS para permitir que
+o front-end em qualquer origem local acesse os métodos GET, POST, PUT, DELETE e OPTIONS."
+
+PROMPT 6 (Front-end com Consumo de API e Feedback de Erro):
+"Desenvolva uma interface web moderna em HTML, CSS e JavaScript puro (fetch API) para o BiblioTech.
+A aplicação deve conter tabela de listagem de livros, modal para cadastro e edição, confirmação antes
+de excluir, e deve tratar e exibir na interface de forma compreensível os status HTTP de erro 400,
+404 e 409 retornados pelo backend."
+
+================================================================================
+FIM DO ARQUIVO RESPOSTAS.txt
+================================================================================

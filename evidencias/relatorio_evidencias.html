@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiblioTech — Relatório Visual de Evidências</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            line-height: 1.6;
+            margin: 0;
+            padding: 30px 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            border-bottom: 2px solid #334155;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #38bdf8;
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+        }
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        .section-title {
+            color: #f1f5f9;
+            font-size: 1.3rem;
+            margin: 30px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #38bdf8;
+            padding-left: 12px;
+        }
+        .card {
+            background-color: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+        }
+        .http-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+        .status-201 { background: #065f46; color: #34d399; }
+        .status-200 { background: #065f46; color: #34d399; }
+        .status-204 { background: #075985; color: #38bdf8; }
+        .status-400 { background: #854d0e; color: #fde047; }
+        .status-404 { background: #991b1b; color: #f87171; }
+        .status-409 { background: #7c2d12; color: #fb923c; }
+
+        pre {
+            background-color: #090d16;
+            border-radius: 6px;
+            padding: 14px;
+            overflow-x: auto;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            border: 1px solid #1e293b;
+            margin: 8px 0;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+        .sql-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: monospace;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+        .sql-table th, .sql-table td {
+            border: 1px solid #334155;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .sql-table th {
+            background-color: #0f172a;
+            color: #38bdf8;
+        }
+        .sql-table td {
+            background-color: #1e293b;
+        }
+        .print-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            float: right;
+        }
+        .print-btn:hover { background-color: #1d4ed8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="print-btn" onclick="window.print()">🖨️ Salvar como PDF / Imprimir</button>
+            <h1>BiblioTech — Relatório Visual de Evidências</h1>
+            <div class="subtitle">Comprovação de Operações do CRUD, Postman, MySQL e Tratamento de Erros</div>
+        </header>
+
+        <!-- EVIDÊNCIA 1 -->
+        <h2 class="section-title">1. CREATE: POST /livros (Status 201 Created)</h2>
+        <div class="card">
+            <div class="card-header">
+                <strong>Requisição e Resposta Postman</strong>
+                <span class="http-badge status-201">201 Created</span>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <small style="color: #94a3b8;">Payload Enviado (JSON):</small>
+                    <pre>{
+  "titulo": "Arquitetura Limpa",
+  "autor": "Robert C. Martin",
+  "isbn": "9788550804606",
+  "genero": "Engenharia de Software",
+  "exemplares": 8
+}</pre>
+                </div>
+                <div>
+                    <small style="color: #94a3b8;">Resposta da API (Location: /livros/4):</small>
+                    <pre>{
+  "id": 4,
+  "titulo": "Arquitetura Limpa",
+  "autor": "Robert C. Martin",
+  "isbn": "9788550804606",
+  "genero": "Engenharia de Software",
+  "exemplares": 8
+}</pre>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <small style="color: #38bdf8;">Comprovação no Banco de Dados (MySQL):</small>
+                <table class="sql-table">
+                    <thead>
+                        <tr><th>id</th><th>titulo</th><th>autor</th><th>isbn</th><th>genero</th><th>exemplares</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>4</td><td>Arquitetura Limpa</td><td>Robert C. Martin</td><td>9788550804606</td><td>Engenharia de Software</td><td>8</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- EVIDÊNCIA 2 -->
+        <h2 class="section-title">2. READ: GET /livros e GET /livros/{id} (Status 200 OK)</h2>
+        <div class="card">
+            <div class="card-header">
+                <strong>Listagem Geral e Busca por ID no Postman</strong>
+                <span class="http-badge status-200">200 OK</span>
+            </div>
+            <pre>[
+  { "id": 1, "titulo": "Clean Code", "autor": "Robert C. Martin", "isbn": "9780132350884", "genero": "Engenharia", "exemplares": 5 },
+  { "id": 2, "titulo": "O Programador Pragmático", "autor": "Andrew Hunt", "isbn": "9788577807000", "genero": "Engenharia", "exemplares": 3 },
+  { "id": 4, "titulo": "Arquitetura Limpa", "autor": "Robert C. Martin", "isbn": "9788550804606", "genero": "Engenharia", "exemplares": 8 }
+]</pre>
+        </div>
+
+        <!-- EVIDÊNCIA 3 -->
+        <h2 class="section-title">3. UPDATE: PUT /livros/{id} (Status 200 OK)</h2>
+        <div class="card">
+            <div class="card-header">
+                <strong>Atualização de Registro Existente (ID: 4)</strong>
+                <span class="http-badge status-200">200 OK</span>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <small style="color: #94a3b8;">PUT /livros/4 (Payload):</small>
+                    <pre>{
+  "titulo": "Arquitetura Limpa (Edição 2)",
+  "autor": "Robert C. Martin",
+  "isbn": "9788550804606",
+  "genero": "Engenharia de Software",
+  "exemplares": 12
+}</pre>
+                </div>
+                <div>
+                    <small style="color: #94a3b8;">Resultado no MySQL:</small>
+                    <pre>Query OK, 1 row affected
+Rows matched: 1  Changed: 1  Warnings: 0</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- EVIDÊNCIA 4 -->
+        <h2 class="section-title">4. DELETE: DELETE /livros/{id} (Status 204 No Content)</h2>
+        <div class="card">
+            <div class="card-header">
+                <strong>Exclusão de Livro pelo ID com Confirmação</strong>
+                <span class="http-badge status-204">204 No Content</span>
+            </div>
+            <p style="font-size: 0.9rem; color: #94a3b8;">Corpo retornado vazio conforme especificação RFC 7231 (No Content).</p>
+            <small style="color: #38bdf8;">Comprovação no MySQL após DELETE /livros/4:</small>
+            <pre>mysql> SELECT * FROM livros WHERE id = 4;
+Empty set (0.00 sec)</pre>
+        </div>
+
+        <!-- EVIDÊNCIA 5 -->
+        <h2 class="section-title">5. Tratamento de Erros e Validações: 400, 404 e 409</h2>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <strong>400 Bad Request</strong>
+                    <span class="http-badge status-400">400</span>
+                </div>
+                <small style="color: #94a3b8;">Dados inválidos rejeitados:</small>
+                <pre>{
+  "status": 400,
+  "erro": "Dados de Requisição Inválidos",
+  "mensagem": "O título deve possuir entre 3 e 150 caracteres.",
+  "validacoes": [
+    { "campo": "titulo", "mensagem": "O título deve possuir entre 3 e 150 caracteres." },
+    { "campo": "exemplares", "mensagem": "O número de exemplares deve ser maior ou igual a 0." }
+  ]
+}</pre>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <strong>409 Conflict</strong>
+                    <span class="http-badge status-409">409</span>
+                </div>
+                <small style="color: #94a3b8;">ISBN Duplicado rejeitado:</small>
+                <pre>{
+  "status": 409,
+  "erro": "Conflito de Dados (ISBN Duplicado)",
+  "mensagem": "Já existe um livro cadastrado com o ISBN informado: 9788550804606",
+  "path": "/livros"
+}</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <strong>404 Not Found (ID Inexistente)</strong>
+                <span class="http-badge status-404">404</span>
+            </div>
+            <pre>{
+  "status": 404,
+  "erro": "Recurso Não Encontrado",
+  "mensagem": "Livro não encontrado com o ID: 9999",
+  "path": "/livros/9999"
+}</pre>
+        </div>
+    </div>
+</body>
+</html>
